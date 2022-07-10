@@ -32,7 +32,7 @@ HttpsURLConnection.setDefaultHostnameVerifier(new JavaAdapter(HostnameVerifier, 
  */
 function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
 { 
-  let Allow_room = ["ㅈㅇㅎ", "김개똥", "재민", "소고기", "닭고기", "척척고졸", "크리에이션", "공익동기"];
+  let Allow_room = [];
   if (Allow_room.indexOf(room) < 0) {return false;}
 
   let reg_room = room.replace(REG, '');
