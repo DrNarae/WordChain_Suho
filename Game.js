@@ -1,9 +1,10 @@
+const scriptName = "Game";
+
 importPackage(javax.net.ssl);
 importPackage(java.lang);
 importPackage(java.net);
 importPackage(java.io);
 
-const scriptName = "Game";
 const Hangul = require("hangul");
 const GamingRoom = {"끝말잇기":{}, "가위바위보":{}};
 const PATH = "/storage/emulated/0/GAME_DATA/";
@@ -61,7 +62,7 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
       }
     }
     
-    GamingRoom[choiceGame][room] = [sender, Date.now(), false, true, "null", [], [], 5, 0, 0, "null"];
+    GamingRoom[choiceGame][room] = [sender, Date.now(), false, true, "null", [], [], 5, 0, 0, "null", false];
     replier.reply(room, descript);
   }
   else
@@ -103,8 +104,41 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
         {
           GamingRoom["끝말잇기"][room][3] = false;
 
+          // 접두사 기호 체크
           if (OriginMsg[0] !== CMDPREFIX) {GamingRoom["끝말잇기"][room][3] = true; return true;}
           
+          // 봐주기
+          if (GamingRoom["끝말잇기"][room][11])
+          {
+            let borrow = -1;
+
+            if (msg === "응")
+            {
+              // "응" 인 경우, 봐주기 확률
+              borrow = Math.floor(Math.random()*100)+1;
+            }
+
+            // "아니" 인 경우, 적용x
+            if (borrow >= 70)
+            {
+              GamingRoom["끝말잇기"][room][6].pop();
+              msg = GamingRoom["끝말잇기"][room][5].pop();
+              GamingRoom["끝말잇기"][room][4] = "null";
+            }
+            else
+            {
+              talk = (borrow === -1 ? "" : "싫습니다.\n") + CMDPREFIX + GamingRoom["끝말잇기"][room][4];
+              GamingRoom["끝말잇기"][room][11] = false;
+              GamingRoom["끝말잇기"][room][8]++;
+              GamingRoom["끝말잇기"][room][5][GamingRoom["끝말잇기"][room][5].length] = GamingRoom["끝말잇기"][room][4];
+              GamingRoom["끝말잇기"][room][3] = true;
+              GamingRoom["끝말잇기"][room][1] = Date.now();
+              replier.reply(room, talk);
+              return;
+            }
+          }
+
+          // 단어/시간 확인
           if (GamingRoom["끝말잇기"][room][5].indexOf(msg) >= 0)
           {
             GamingRoom["끝말잇기"][room][7]--;
@@ -133,7 +167,8 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
           {
             // 단어 검색 -> 존재 유무 판단 - (있을경우) -> 시작단어 검색 후 출력
             //                           ㄴ (없을경우) -> 경고
-            let resultWord = WordSearch(msg, 0, room, true);
+
+            let resultWord = (GamingRoom["끝말잇기"][room][11]) ? msg : WordSearch(msg, 0, room, true);
 
             if (resultWord && resultWord === msg)
             {
@@ -142,11 +177,10 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
               GamingRoom["끝말잇기"][room][1] = Date.now();
               
               let myword = '';
-
-              // 저장한 한방단어 존재유무 *****
               let possibleStartWord = KorDivision(msg[msg.length-1], '', 1);
 
-              if (GamingRoom["끝말잇기"][room][9] === 2)
+              // 저장한 한방단어 존재유무 *****
+              if (!GamingRoom["끝말잇기"][room][11] && GamingRoom["끝말잇기"][room][9] === 2)
               {
                 for (let i = 0; i < possibleStartWord.length; i++)
                 {
@@ -155,6 +189,8 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                 }
               }
 
+              GamingRoom["끝말잇기"][room][11] = false;
+
               if (myword === '')
               {
                 for (let i = 0; i < possibleStartWord.length; i++)
@@ -162,6 +198,17 @@ function response(room, msg, sender, isGroupChat, replier, imageDB, packageName)
                   myword = WordSearch(possibleStartWord[i], 1, room, true);
                   if (myword) break;
                 }
+              }
+              else if (Math.floor(Math.random()*100)+1 >= 70)
+              {
+                // 30% 확률로 봐주기 멘트 묻기
+                // 변수 추가
+                GamingRoom["끝말잇기"][room][11] = true;
+                GamingRoom["끝말잇기"][room][4] = myword;
+                GamingRoom["끝말잇기"][room][3] = true;
+                GamingRoom["끝말잇기"][room][1] = Date.now();
+                replier.reply(room, "흠... 봐드릴까요?\n\t(응 / 아니)");
+                return;
               }
 
               if (Date.now() - GamingRoom["끝말잇기"][room][1] >= TIMELIMIT)
