@@ -16,5 +16,5 @@
 <hr>
 <h3>주의사항</h3>
 
-https://github.com/e-/Hangul.js 에서 hangul.js 파일을 먼저 넣어야 합니다.<br>
+https://github.com/e-/Hangul.js 에서 hangul.js 모듈을 먼저 모듈폴더에 넣어야 합니다.<br>
 게임 시작 전에 게임 스크립트 첫부분에 Allow_room 안에 채팅방 이름을 넣어야 합니다.
